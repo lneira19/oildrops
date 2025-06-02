@@ -1,5 +1,11 @@
 import os
-base_dir = open("basepath.txt", "r").read()
+
+# Obtener el directorio donde está este script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+# Construir path al archivo txt
+basepath_file = os.path.join(script_dir, "basepath.txt")
+
+base_dir = open(basepath_file, "r").read()
 
 def getFilesFromDirectory(directory, extensions=None):
     """

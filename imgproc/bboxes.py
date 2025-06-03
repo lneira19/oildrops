@@ -44,17 +44,22 @@ class Bbox:
         # Obtener bounding boxes para cada máscara individual
         list_bboxes = [ipbasics.getBoundingBox(mask) for mask in list_individual_masks]
 
-        # Filtrar bounding boxes que no tengan un área mínima
-        list_bboxes = [bbox for bbox in list_bboxes if (bbox[0][0] - bbox[1][0]) * (bbox[0][1] - bbox[1][1]) > minarea]
+        # Filtrar bounding boxes y máscaras individuales por tamaño válido de bounding box
+        list_individual_masks_filtered = [mask for mask, bbox in zip(list_individual_masks, list_bboxes) if (bbox[0][0] - bbox[1][0])*(bbox[0][1] - bbox[1][1]) > minarea]
+        list_bboxes = [bbox for bbox in list_bboxes if (bbox[0][0] - bbox[1][0])*(bbox[0][1] - bbox[1][1]) > minarea]
 
-        return list_bboxes
+        # Ordenar bbox y individualmask por x1 (primer elemento del primer punto) de la bbox
+        list_bboxes_sorted = sorted(list_bboxes, key=lambda bbox: bbox[0][0])
+        list_individual_masks_filtered_sorted = [mask for _, mask in sorted(zip(list_bboxes, list_individual_masks_filtered), key=lambda x: x[0][0])]
+
+        return list_bboxes_sorted, list_individual_masks_filtered_sorted
     
     def getImgWithBboxes(self, path_img, sdk=-1,minarea=250):
         
         bgr_img = cv2.imread(path_img) # Imagen BGR
         rgb_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB) # Convertir a RGB para matplotlib
 
-        bboxes = self.getBoundingBoxesForImg(bgr_img=bgr_img,sdk=sdk,minarea=minarea)
+        bboxes, masks = self.getBoundingBoxesForImg(bgr_img=bgr_img,sdk=sdk,minarea=minarea)
 
         rgb_img_copy = rgb_img.copy()
         for bbox in bboxes:

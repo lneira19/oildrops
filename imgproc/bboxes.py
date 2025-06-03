@@ -4,6 +4,7 @@ import imgproc.basics as ipbasics
 # Módulos externos
 import numpy as np
 import cv2
+import pandas as pd
 
 class Bbox:
     def __init__(self,
@@ -66,3 +67,29 @@ class Bbox:
             cv2.rectangle(rgb_img_copy, bbox[0], bbox[1], (0, 255, 0), 2)
         
         return rgb_img_copy, bboxes
+    
+    def getDataFrameForImg(self, path_img, name_img, sdk=-1, minarea=250):
+        
+        bgr_img = cv2.imread(path_img) # Imagen BGR
+
+        # Obtener bounding boxes y máscaras
+        bboxes, masks = self.getBoundingBoxesForImg(bgr_img,sdk=sdk,minarea=minarea)
+
+        # Crear un DataFrame para almacenar los resultados
+        df = pd.DataFrame(columns=['file_name','bbox','x1', 'y1', 'x2', 'y2', 'width', 'height','bbox_area', 'mask_area'])
+
+        # Iterar sobre las bounding boxes y máscaras para llenar el DataFrame
+        for i, pack in enumerate(zip(bboxes, masks)):
+    
+            bbox, mask = pack
+
+            x1, y1 = bbox[0]
+            x2, y2 = bbox[1]
+            bbox_width = x2 - x1
+            bbox_height = y2 - y1
+            bbox_area = bbox_width * bbox_height
+            mask_area = int(np.sum(mask) / 255)
+
+            df.loc[len(df)] = [name_img, i, x1, y1, x2, y2, bbox_width, bbox_height, bbox_area, mask_area]
+
+        return df

@@ -29,31 +29,34 @@ class Bbox:
         # Crear una máscara para el color rosa
         mask = cv2.inRange(hsv_img_blur, lower_color, upper_color)
 
-        # Aplicar apertura morfológica para eliminar ruido
-        opening_kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
-        mask_open = cv2.morphologyEx(mask, cv2.MORPH_OPEN, opening_kernel)
+        if np.sum(mask) == 0:
+            return [], []
+        else:
+            # Aplicar apertura morfológica para eliminar ruido
+            opening_kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+            mask_open = cv2.morphologyEx(mask, cv2.MORPH_OPEN, opening_kernel)
 
-        # Obtener contornos de la máscara
-        contours, contours_img = ipbasics.getContours(mask_open)
+            # Obtener contornos de la máscara
+            contours, contours_img = ipbasics.getContours(mask_open)
 
-        # Filtrar contornos por longitud
-        contours_filtered, contours_filtered_img = ipbasics.filterContours(mask_open, contours, mult=sdk, mode='UP')
+            # Filtrar contornos por longitud
+            contours_filtered, contours_filtered_img = ipbasics.filterContours(mask_open, contours, mult=sdk, mode='UP')
 
-        # Obtener máscaras individuales para cada contorno filtrado
-        list_individual_masks = ipbasics.getIndividualMasks(mask_open,contours_filtered)
+            # Obtener máscaras individuales para cada contorno filtrado
+            list_individual_masks = ipbasics.getIndividualMasks(mask_open,contours_filtered)
 
-        # Obtener bounding boxes para cada máscara individual
-        list_bboxes = [ipbasics.getBoundingBox(mask) for mask in list_individual_masks]
+            # Obtener bounding boxes para cada máscara individual
+            list_bboxes = [ipbasics.getBoundingBox(mask) for mask in list_individual_masks]
 
-        # Filtrar bounding boxes y máscaras individuales por tamaño válido de bounding box
-        list_individual_masks_filtered = [mask for mask, bbox in zip(list_individual_masks, list_bboxes) if (bbox[0][0] - bbox[1][0])*(bbox[0][1] - bbox[1][1]) > minarea]
-        list_bboxes = [bbox for bbox in list_bboxes if (bbox[0][0] - bbox[1][0])*(bbox[0][1] - bbox[1][1]) > minarea]
+            # Filtrar bounding boxes y máscaras individuales por tamaño válido de bounding box
+            list_individual_masks_filtered = [mask for mask, bbox in zip(list_individual_masks, list_bboxes) if (bbox[0][0] - bbox[1][0])*(bbox[0][1] - bbox[1][1]) > minarea]
+            list_bboxes_filtered = [bbox for bbox in list_bboxes if (bbox[0][0] - bbox[1][0])*(bbox[0][1] - bbox[1][1]) > minarea]
 
-        # Ordenar bbox y individualmask por x1 (primer elemento del primer punto) de la bbox
-        list_bboxes_sorted = sorted(list_bboxes, key=lambda bbox: bbox[0][0])
-        list_individual_masks_filtered_sorted = [mask for _, mask in sorted(zip(list_bboxes, list_individual_masks_filtered), key=lambda x: x[0][0])]
+            # Ordenar bbox y individualmask por x1 (primer elemento del primer punto) de la bbox
+            list_bboxes_filtered_sorted = sorted(list_bboxes_filtered, key=lambda bbox: bbox[0][0])
+            list_individual_masks_filtered_sorted = [mask for _, mask in sorted(zip(list_bboxes_filtered, list_individual_masks_filtered), key=lambda x: x[0][0][0])]
 
-        return list_bboxes_sorted, list_individual_masks_filtered_sorted
+            return list_bboxes_filtered_sorted, list_individual_masks_filtered_sorted
     
     def getImgWithBboxes(self, path_img, sdk=-1,minarea=250):
         
@@ -62,9 +65,12 @@ class Bbox:
 
         bboxes, masks = self.getBoundingBoxesForImg(bgr_img=bgr_img,sdk=sdk,minarea=minarea)
 
-        rgb_img_copy = rgb_img.copy()
-        for bbox in bboxes:
-            cv2.rectangle(rgb_img_copy, bbox[0], bbox[1], (0, 255, 0), 2)
+        if len(bboxes) == 0:
+            return rgb_img, []
+        else:
+            rgb_img_copy = rgb_img.copy()
+            for bbox in bboxes:
+                cv2.rectangle(rgb_img_copy, bbox[0], bbox[1], (0, 255, 0), 2)
         
         return rgb_img_copy, bboxes
     
@@ -78,18 +84,22 @@ class Bbox:
         # Crear un DataFrame para almacenar los resultados
         df = pd.DataFrame(columns=['file_name','bbox','x1', 'y1', 'x2', 'y2', 'width', 'height','bbox_area', 'mask_area'])
 
-        # Iterar sobre las bounding boxes y máscaras para llenar el DataFrame
-        for i, pack in enumerate(zip(bboxes, masks)):
-    
-            bbox, mask = pack
+        # Si no se encuentran bounding boxes, retornar un DataFrame vacío
+        if len(bboxes) == 0:
+            df.loc[len(df)] = [name_img, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        else:
+            # Iterar sobre las bounding boxes y máscaras para llenar el DataFrame
+            for i, pack in enumerate(zip(bboxes, masks)):
+        
+                bbox, mask = pack
 
-            x1, y1 = bbox[0]
-            x2, y2 = bbox[1]
-            bbox_width = x2 - x1
-            bbox_height = y2 - y1
-            bbox_area = bbox_width * bbox_height
-            mask_area = int(np.sum(mask) / 255)
+                x1, y1 = bbox[0]
+                x2, y2 = bbox[1]
+                bbox_width = x2 - x1
+                bbox_height = y2 - y1
+                bbox_area = bbox_width * bbox_height
+                mask_area = int(np.sum(mask) / 255)
 
-            df.loc[len(df)] = [name_img, i, x1, y1, x2, y2, bbox_width, bbox_height, bbox_area, mask_area]
+                df.loc[len(df)] = [name_img, i, x1, y1, x2, y2, bbox_width, bbox_height, bbox_area, mask_area]
 
         return df

@@ -134,7 +134,7 @@ class Bbox:
 
                 # Predicción
                 prediction = loaded_model.predict(features, verbose=0)
-                prediction = np.uint8(np.ceil(prediction[0][0]))
+                prediction = np.uint8(np.round(prediction[0][0]))
                 preditions.append(prediction)
 
                 cv2.rectangle(rgb_img_copy, bbox[0], bbox[1], (0, 255, 0), 2)

@@ -23,6 +23,9 @@ def getFilesFromDirectory(directory, extensions=None):
 
     for root, _, filenames in os.walk(complete_directory):
         for filename in filenames:
+            # Ignorar archivos menores a 1 byte
+            if os.path.getsize(os.path.join(root, filename)) < 1:
+                continue
             if extensions is None or any(filename.endswith(ext) for ext in extensions):
                 list_files.append(os.path.join(root, filename))
                 list_filenames.append(filename)

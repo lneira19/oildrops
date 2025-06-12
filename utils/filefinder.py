@@ -7,13 +7,16 @@ basepath_file = os.path.join(script_dir, "basepath.txt")
 
 base_dir = open(basepath_file, "r").read()
 
-def getFilesFromDirectory(directory, extensions=None):
+def getFilesFromDirectory(directory, extensions=None, absolute_path=False):
     """
     Retrieves files from a specified directory with optional filtering by file extensions.
     :param directory: The directory path to search for files.
     :param extensions: A list of file extensions to filter by (e.g., ['.jpg', '.png']). If None, all files are returned."""
     
-    complete_directory = base_dir + directory
+    if absolute_path == False:
+        complete_directory = base_dir + directory
+    else:
+        complete_directory = directory
     
     if not os.path.isdir(complete_directory):
         raise ValueError(f"The provided path '{complete_directory}' is not a valid directory.")

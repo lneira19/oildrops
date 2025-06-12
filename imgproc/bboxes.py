@@ -106,10 +106,10 @@ class Bbox:
 
         return df
     
-    def getImgWithBboxesAndDrops(self, path_img, sdk=-1,minarea=250):
+    def getImgWithBboxesAndDrops(self, path_img, sdk=-1,minarea=250,model_to_use="dropcounter_v02_model"):
         
         # Cargar el modelo previamente entrenado
-        loaded_model = load_model('../models/dropcounter_v01_model.keras')
+        loaded_model = load_model('../models/'+model_to_use+'.keras')
 
         bgr_img = cv2.imread(path_img) # Imagen BGR
         rgb_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB) # Convertir a RGB

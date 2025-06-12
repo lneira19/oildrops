@@ -62,6 +62,7 @@ def main():
         
         cv2.putText(img_with_bbox_and_drops, text_speed, (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
         cv2.putText(img_with_bbox_and_drops, text_frequency, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
+        cv2.putText(img_with_bbox_and_drops, "Drop areas in mm2", (10, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
         
         list_img_with_bboxes_and_drops.append(img_with_bbox_and_drops)
 

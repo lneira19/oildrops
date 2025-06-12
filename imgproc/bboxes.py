@@ -145,7 +145,7 @@ class Bbox:
                 cv2.rectangle(rgb_img_copy, bbox[0], bbox[1], (0, 255, 0), 2)
 
                 # Colocación de texto en la imagen
-                text = f"D:{prediction}-A:{area_mask:.2f}"
+                text = f"D:{prediction} A:{area_mask:.2f}"
                 cv2.putText(rgb_img_copy, text, (bbox[0][0], bbox[0][1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
         return rgb_img_copy, predictions

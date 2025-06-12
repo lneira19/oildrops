@@ -14,6 +14,7 @@ class Bbox:
 
         self.hsv_lower_limit =  hsv_lower_limit
         self.hsv_upper_limit = hsv_upper_limit
+        self.pixel_area = 1/1936 #mm2
     
     def getBoundingBoxesForImg(self,bgr_img,sdk=-1,minarea=250):
 
@@ -108,21 +109,25 @@ class Bbox:
     def getImgWithBboxesAndDrops(self, path_img, sdk=-1,minarea=250):
         
         # Cargar el modelo previamente entrenado
-        loaded_model = load_model('models/dropcounter_v01_model.keras')
+        loaded_model = load_model('../models/dropcounter_v01_model.keras')
 
         bgr_img = cv2.imread(path_img) # Imagen BGR
         rgb_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB) # Convertir a RGB
         bboxes, masks = Bbox().getBoundingBoxesForImg(bgr_img, sdk=sdk, minarea=minarea)
 
         rgb_img_copy = rgb_img.copy()
-        preditions = []
+        predictions = []
 
         if len(bboxes) == 0:
             rgb_img_copy = rgb_img
         else:
             for i, pack in enumerate(zip(bboxes, masks)):
                 bbox, mask = pack
+                
+                # Área de la máscara
+                area_mask = int(np.sum(mask) / 255) * self.pixel_area
 
+                # Features
                 x1, y1 = bbox[0]
                 x2, y2 = bbox[1]
                 bbox_width = x2 - x1
@@ -135,9 +140,12 @@ class Bbox:
                 # Predicción
                 prediction = loaded_model.predict(features, verbose=0)
                 prediction = np.uint8(np.round(prediction[0][0]))
-                preditions.append(prediction)
+                predictions.append(prediction)
 
                 cv2.rectangle(rgb_img_copy, bbox[0], bbox[1], (0, 255, 0), 2)
-                cv2.putText(rgb_img_copy, str(prediction), (bbox[0][0], bbox[0][1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-        return rgb_img_copy, preditions
+                # Colocación de texto en la imagen
+                text = f"D:{prediction}-A:{area_mask:.2f}"
+                cv2.putText(rgb_img_copy, text, (bbox[0][0], bbox[0][1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+        return rgb_img_copy, predictions

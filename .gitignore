@@ -195,3 +195,17 @@ cython_debug/
 utils/basepath.txt
 .gitignore
 
+videosdata/video_de_Lou_2_results.csv
+videos/video_de_Lou.mp4
+.gitignore
+videos/video_de_Lou_2.mp4
+videos/gotas04_bboxndrops_v02.mp4
+videos/gotas04_bboxndrops_v01.mp4
+videos/bbox_video_2.mp4
+.gitignore
+videos/bbox_video.mp4
+videos/gotas01_bboxndrops_v01.mp4
+.gitignore
+videos/gotas01_bboxndrops_v02.mp4
+videos/gotas02_bboxndrops_v02.mp4
+videos/gotas02_bboxndrops_v01.mp4

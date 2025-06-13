@@ -21,7 +21,7 @@ def main():
     directory = "G:/.shortcut-targets-by-id/1eSWtGFN4d04am-NeZYnBXECxrJstfQiu/00_Gotas/Gotas_04/Imagenes/session_1"
     
     # Poné acá el nombre del video de salida sin la extensión
-    video_name = "video_de_Lou"
+    video_name = "gotas_04_session_1_reduced"
 
     ##################################################################
     ###############    NO TOQUES MÁS NADA LOURDES!!!!!  ##############
@@ -35,15 +35,27 @@ def main():
     #### Ajuste los valores de la lista si es necesario ##############
     ##################################################################
 
-    selected_list_files = list_files #SI ES NECESARIO, HACÉ SLICE A A LISTA ASÍ: list_files[0:100]
-    selected_list_filenames = list_filenames
+    selected_list_files = list_files[60:560] #SI ES NECESARIO, HACÉ SLICE A A LISTA ASÍ: list_files[0:100]
+    selected_list_filenames = list_filenames[60:560]
 
     ##################################################################
     ###############    AHORA SÍ                         ##############
     ###############    NO TOQUES MÁS NADA LOURDES!!!!!  ##############
     ##################################################################
 
+    # Lista para almacenar las imágenes con bounding boxes y gotas
     list_img_with_bboxes_and_drops = []
+
+    # Listas para almacenar los resultados
+    list_numberbboxes = []
+    list_drop_predictions = []
+    list_drop_areas = []
+    list_speeds = []
+    list_frequencies = []
+
+    # Creación del DataFrame para almacenar los resultados
+    df_results = pd.DataFrame(columns=['file_name', 'number_bboxes', 'drop_predictions', 'drop_areas', 'speed_mm_s', 'frequency_Hz'])
+    
     for i,file in enumerate(selected_list_files):
         
         speed = 0
@@ -58,13 +70,20 @@ def main():
         text_speed = f"Speed: {speed:.2f} mm/s"
         text_frequency = f"Frequency: {frequency:.2f} Hz"
 
-        img_with_bbox_and_drops, predictions = Bbox().getImgWithBboxesAndDrops(path_img=file,sdk=-2,minarea=250)
+        img_with_bbox_and_drops, predictions, areas = Bbox().getImgWithBboxesAndDrops(path_img=file,sdk=-2,minarea=250)
         
         cv2.putText(img_with_bbox_and_drops, text_speed, (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
         cv2.putText(img_with_bbox_and_drops, text_frequency, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
         cv2.putText(img_with_bbox_and_drops, "Drop areas in mm2", (10, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
         
         list_img_with_bboxes_and_drops.append(img_with_bbox_and_drops)
+        
+        # Guardado de datos en listas correspondientes
+        list_numberbboxes.append(len(predictions))
+        list_drop_predictions.append(predictions)
+        list_drop_areas.append(areas)
+        list_speeds.append(speed)
+        list_frequencies.append(frequency)
 
     # Configuración del video
     output_path = "../videos/"+video_name+".mp4"  # Nombre del archivo de salida
@@ -82,6 +101,18 @@ def main():
     # Liberar recursos
     video_writer.release()
 
+    # Crear DataFrame con los resultados
+    df_results['file_name'] = selected_list_filenames
+    df_results['number_bboxes'] = list_numberbboxes
+    df_results['drop_predictions'] = list_drop_predictions
+    df_results['drop_areas'] = list_drop_areas
+    df_results['speed_mm_s'] = list_speeds
+    df_results['frequency_Hz'] = list_frequencies
+
+    # Guardar el DataFrame en un archivo CSV
+    df_results.to_csv("../videosdata/"+video_name+"_results.csv", index=False)
+
+    print("\n\n\Dataframe guardado exitosamente\n\n\n")
     print("\n\n\nVideo creado exitosamente\n\n\n")
 
 

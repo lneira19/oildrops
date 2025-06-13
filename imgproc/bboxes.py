@@ -117,6 +117,7 @@ class Bbox:
 
         rgb_img_copy = rgb_img.copy()
         predictions = []
+        areas = []
 
         if len(bboxes) == 0:
             rgb_img_copy = rgb_img
@@ -126,6 +127,7 @@ class Bbox:
                 
                 # Área de la máscara
                 area_mask = int(np.sum(mask) / 255) * self.pixel_area
+                areas.append(area_mask)
 
                 # Features
                 x1, y1 = bbox[0]
@@ -148,4 +150,4 @@ class Bbox:
                 text = f"D:{prediction} A:{area_mask:.2f}"
                 cv2.putText(rgb_img_copy, text, (bbox[0][0], bbox[0][1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-        return rgb_img_copy, predictions
+        return rgb_img_copy, predictions, areas
